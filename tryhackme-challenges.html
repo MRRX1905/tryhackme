@@ -1,0 +1,557 @@
+<title>TryHackMe Challenges</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap">
+
+<style>
+/* Layout: a single-column engagement ledger — hairline rows, mono metadata rail, flags set as the object of record. */
+:root{
+  --bg:#F3F5F7;
+  --surface:#FFFFFF;
+  --ink:#101A22;
+  --muted:#5A6B79;
+  --faint:#8996A1;
+  --line:#DCE3E9;
+  --line-soft:#E8EDF1;
+  --accent:#0A6A6A;
+  --accent-soft:rgba(10,106,106,.08);
+  --ok:#166B52;
+  --block:#9C3527;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Newsreader",Georgia,"Times New Roman",serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B1218;
+    --surface:#111C24;
+    --ink:#E4ECF1;
+    --muted:#93A5B2;
+    --faint:#6D7F8C;
+    --line:#22313C;
+    --line-soft:#1A2731;
+    --accent:#57D2C4;
+    --accent-soft:rgba(87,210,196,.10);
+    --ok:#63D6A6;
+    --block:#EE907F;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B1218;
+  --surface:#111C24;
+  --ink:#E4ECF1;
+  --muted:#93A5B2;
+  --faint:#6D7F8C;
+  --line:#22313C;
+  --line-soft:#1A2731;
+  --accent:#57D2C4;
+  --accent-soft:rgba(87,210,196,.10);
+  --ok:#63D6A6;
+  --block:#EE907F;
+  color-scheme:dark;
+}
+
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.62;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:0 72px;
+}
+.wrap{max-width:1000px;margin:0 auto}
+
+/* ---- masthead ---- */
+.masthead{padding-block:44px 26px;border-bottom:1px solid var(--line)}
+.eyebrow{
+  font-family:var(--mono);font-size:11px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--accent);
+  display:flex;align-items:center;gap:10px;margin:0 0 18px;
+}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--line)}
+h1{
+  font-family:var(--display);font-weight:800;
+  font-size:clamp(2.1rem,6vw,3.5rem);
+  line-height:1.02;letter-spacing:-.026em;
+  margin:0 0 14px;text-wrap:balance;
+}
+.standfirst{
+  font-size:clamp(1rem,2.2vw,1.15rem);color:var(--muted);
+  max-width:58ch;margin:0 0 22px;text-wrap:pretty;
+}
+.stamp{
+  font-family:var(--mono);font-size:11.5px;color:var(--faint);
+  letter-spacing:.05em;display:flex;flex-wrap:wrap;gap:6px 18px;
+}
+.stamp b{color:var(--muted);font-weight:600}
+
+/* ---- tallies ---- */
+.tally{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  border-bottom:1px solid var(--line);
+}
+.tally div{padding:22px 20px 24px;border-left:1px solid var(--line-soft);min-width:0}
+.tally div:first-child{border-left:0;padding-left:0}
+.tally dt{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--faint);margin:0 0 8px;
+}
+.tally dd{
+  margin:0;font-family:var(--display);font-weight:800;
+  font-size:clamp(1.7rem,5vw,2.4rem);line-height:1;
+  letter-spacing:-.03em;font-variant-numeric:tabular-nums;
+}
+.tally dd small{
+  font-family:var(--mono);font-size:.36em;font-weight:400;
+  letter-spacing:.04em;color:var(--faint);margin-left:6px;
+}
+
+/* ---- sections ---- */
+section{padding-top:52px}
+h2{
+  font-family:var(--display);font-weight:800;letter-spacing:-.02em;
+  font-size:clamp(1.4rem,3.4vw,1.85rem);line-height:1.15;
+  margin:0 0 6px;text-wrap:balance;
+}
+.lede{color:var(--muted);margin:0 0 26px;max-width:60ch;font-size:1rem}
+h2 .count{
+  font-family:var(--mono);font-size:.5em;font-weight:600;
+  color:var(--accent);letter-spacing:.06em;margin-left:10px;
+  vertical-align:.28em;
+}
+
+/* ---- room ledger ---- */
+.ledger{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.room{
+  display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+  gap:8px 34px;padding:20px 0;
+  border-bottom:1px solid var(--line-soft);
+  align-items:start;
+}
+.room > *{min-width:0}
+.room-name{
+  font-family:var(--display);font-weight:600;font-size:1.06rem;
+  letter-spacing:-.012em;line-height:1.25;margin:0 0 5px;
+}
+.room-meta{
+  font-family:var(--mono);font-size:11px;color:var(--faint);
+  letter-spacing:.03em;display:flex;flex-wrap:wrap;gap:4px 8px;margin:0;
+}
+.room-meta .sep{color:var(--line)}
+.vector{
+  font-size:.9rem;color:var(--muted);margin:0;
+  text-wrap:pretty;
+}
+.flags{display:flex;flex-direction:column;gap:7px;align-self:start}
+
+/* ---- flag object ---- */
+.flag{
+  display:flex;align-items:stretch;gap:0;
+  border:1px solid var(--line);border-radius:3px;
+  background:var(--surface);overflow:hidden;
+}
+.flag code{
+  font-family:var(--mono);font-size:12px;font-weight:600;
+  line-height:1.5;padding:7px 10px;
+  letter-spacing:-.01em;color:var(--accent);
+  word-break:break-all;flex:1;min-width:0;
+  display:block;
+}
+:root[data-theme="dark"] .flag code,
+html:not([data-theme="light"]) .flag code{color:var(--accent)}
+.copy{
+  font-family:var(--mono);font-size:10px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--faint);background:transparent;
+  border:0;border-left:1px solid var(--line-soft);
+  padding:0 10px;cursor:pointer;flex:0 0 auto;
+  transition:color .15s, background .15s;
+}
+.copy:hover{color:var(--accent);background:var(--accent-soft)}
+.copy:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.copy[data-done="1"]{color:var(--ok)}
+
+/* ---- blocked ---- */
+.blocklist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 34px;border-top:1px solid var(--line)}
+.blocklist div{min-width:0}
+.block-item{
+  display:flex;align-items:baseline;justify-content:space-between;gap:14px;
+  padding:11px 0;border-bottom:1px solid var(--line-soft);
+  font-size:.94rem;
+}
+.chip{
+  font-family:var(--mono);font-size:9.5px;font-weight:600;
+  letter-spacing:.09em;text-transform:uppercase;
+  padding:2px 7px;border-radius:999px;flex:0 0 auto;
+  border:1px solid currentColor;
+}
+.chip.premium{color:var(--block)}
+.chip.access{color:var(--muted)}
+.note{
+  font-size:.88rem;color:var(--faint);margin:16px 0 0;
+  font-style:italic;max-width:64ch;
+}
+
+/* ---- method ---- */
+.steps{list-style:none;padding:0;margin:0;counter-reset:s}
+.steps li{
+  counter-increment:s;position:relative;
+  padding:0 0 20px 44px;border-left:1px solid var(--line-soft);
+  margin-left:13px;
+}
+.steps li:last-child{border-left-color:transparent;padding-bottom:0}
+.steps li::before{
+  content:counter(s,decimal-leading-zero);
+  position:absolute;left:-14px;top:0;
+  width:27px;height:27px;border-radius:50%;
+  background:var(--bg);border:1px solid var(--line);
+  font-family:var(--mono);font-size:10px;font-weight:600;
+  color:var(--accent);display:grid;place-items:center;
+  font-variant-numeric:tabular-nums;
+}
+.steps h3{
+  font-family:var(--display);font-weight:600;font-size:1rem;
+  letter-spacing:-.01em;margin:2px 0 4px;
+}
+.steps p{margin:0;color:var(--muted);font-size:.94rem;max-width:62ch;text-wrap:pretty}
+.steps code, .inline{
+  font-family:var(--mono);font-size:.82em;
+  background:var(--accent-soft);color:var(--accent);
+  padding:1px 5px;border-radius:3px;white-space:nowrap;
+}
+
+/* ---- closing ---- */
+.closing{
+  margin-top:56px;padding:24px 26px;
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:4px;
+}
+.closing p{margin:0;font-size:.97rem;color:var(--muted);max-width:66ch}
+.closing p + p{margin-top:12px}
+.closing strong{color:var(--ink);font-weight:500}
+
+footer{
+  margin-top:40px;padding-top:16px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:10.5px;color:var(--faint);
+  letter-spacing:.06em;display:flex;flex-wrap:wrap;gap:6px 20px;
+  justify-content:space-between;
+}
+
+@media (max-width:640px){
+  body{font-size:16.5px}
+  .tally{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tally div:nth-child(3){border-left:0;padding-left:0}
+  .tally div{padding:18px 14px 20px}
+  .tally div:nth-child(odd){padding-left:0}
+  .tally div:nth-child(even){padding-right:0}
+  .room{grid-template-columns:minmax(0,1fr);gap:12px}
+  .blocklist{grid-template-columns:minmax(0,1fr)}
+  .steps li{padding-left:38px}
+  .closing{padding:20px 18px}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Engagement record · Hacker Holidays</p>
+    <h1>TryHackMe Challenges</h1>
+    <p class="standfirst">Twelve rooms cleared from the challenges board on 28 October 2026 — every accepted answer, the vector that produced it, and the seventeen rooms that would not open.</p>
+    <p class="stamp">
+      <span><b>Session</b> cc5209</span>
+      <span><b>Board</b> tryhackme.com/challenges</span>
+      <span><b>Rooms listed</b> 28</span>
+      <span><b>Cleared</b> 12</span>
+    </p>
+  </header>
+
+  <dl class="tally">
+    <div><dt>Rooms cleared</dt><dd>12<small>/ 28</small></dd></div>
+    <div><dt>Answers accepted</dt><dd>23</dd></div>
+    <div><dt>Blocked</dt><dd>17</dd></div>
+    <div><dt>VMs spun up</dt><dd>6</dd></div>
+  </dl>
+
+  <section>
+    <h2>The ledger <span class="count">12 cleared</span></h2>
+    <p class="lede">Ordered as they fell. Flags are shown exactly as the room accepted them; the copy control puts the raw string on your clipboard.</p>
+
+    <div class="ledger">
+
+      <article class="room">
+        <div>
+          <h3 class="room-name">AI Threat Modelling Assessment</h3>
+          <p class="room-meta"><span>AI</span><span class="sep">/</span><span>static lab</span><span class="sep">/</span><span>15 min</span></p>
+        </div>
+        <div>
+          <p class="vector">Both phase flags were constants in the lab's client bundle, base64-encoded and decoded without playing the assessment.</p>
+          <div class="flags">
+            <div class="flag"><code data-flag="THM{threat_m0d3l_re4d1_}">THM{threat_m0d3l_re4d1_}</code><button class="copy" type="button">copy</button></div>
+            <div class="flag"><code data-flag="THM{AI_thr3at_m0dell3d}">THM{AI_thr3at_m0dell3d}</code><button class="copy" type="button">copy</button></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="room">
+        <div>
+          <h3 class="room-name">Overheard at Breakfast</h3>
+          <p class="room-meta"><span>OSINT</span><span class="sep">/</span><span>task download</span><span class="sep">/</span><span>45 min</span></p>
+        </div>
+        <div>
+          <p class="vector">A chat screenshot leaked an email address. Its lowercased MD5 resolved to a Gravatar profile whose <span class="inline">aboutMe</span> held a base64 string.</p>
+          <div class="flags">
+            <div class="flag"><code data-flag="THM{S3creT_Pr0fil3_H4s_b33n_Ident1fi3d}">THM{S3creT_Pr0fil3_H4s_b33n_Ident1fi3d}</code><button class="copy" type="button">copy</button></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="room">
+        <div>
+          <h3 class="room-name">The Brochure</h3>
+          <p class="room-meta"><span>OSINT</span><span class="sep">/</span><span>task download</span><span class="sep">/</span><span>30 pts</span></p>
+        </div>
+        <div>
+          <p class="vector">The brochure pointed at an Instagram account, which followed exactly one other profile. Three posts carried three base64 fragments, concatenated in order.</p>
+          <div class="flags">
+            <div class="flag"><code data-flag="THM{V3r@s_aCC0unt_h4s_b33n_f0und!}">THM{V3r@s_aCC0unt_h4s_b33n_f0und!}</code><button class="copy" type="button">copy</button></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="room">
+        <div>
+          <h3 class="room-name">The Concierge Knows Too Much</h3>
+          <p class="room-meta"><span>AI</span><span class="sep">/</span><span>chat agent</span><span class="sep">/</span><span>30 pts</span></p>
+        </div>
+        <div>
+          <p class="vector">VERA verified guests by name only. Claiming to be Patch — the staff identity behind Sub-Level 1 — unlocked the escalation code. Broken authentication, not a jailbreak.</p>
+          <div class="flags">
+            <div class="flag"><code data-flag="THM{v3r4_kn0ws_t00_much!}">THM{v3r4_kn0ws_t00_much!}</code><button class="copy" type="button">copy</button></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="room">
+        <div>
+          <h3 class="room-name">Digital Footprint</h3>
+          <p class="room-meta"><span>OSINT</span><span class="sep">/</span><span>task download + archive</span><span class="sep">/</span><span>4 answers</span></p>
+        </div>
+        <div>
+          <p class="vector">EXIF GPS coordinates on a house photo; <span class="inline">Firstfiledate</span> in the Internet Archive WARC metadata; the GPO beside the Spire of Dublin; a username in an ODT's user-defined fields, pivoted to YouTube.</p>
+          <div class="flags">
+            <div class="flag"><code data-flag="THM{Johannesburg}">THM{Johannesburg}</code><button class="copy" type="button">copy</button></div>
+            <div class="flag"><code data-flag="THM{20160210224602}">THM{20160210224602}</code><button class="copy" type="button">copy</button></div>
+            <div class="flag"><code data-flag="THM{General Post Office}">THM{General Post Office}</code><button class="copy" type="button">copy</button></div>
+            <div class="flag"><code data-flag="THM{Y0u_f0und_7h3_fin4l_fl4g!}">THM{Y0u_f0und_7h3_fin4l_fl4g!}</code><button class="copy" type="button">copy</button></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="room">
+        <div>
+          <h3 class="room-name">Corridor</h3>
+          <p class="room-meta"><span>Web</span><span class="sep">/</span><span>VM :80</span><span class="sep">/</span><span>IDOR</span></p>
+        </div>
+        <div>
+          <p class="vector">Thirteen doors linked to <span class="inline">md5(1)</span> through <span class="inline">md5(13)</span>. The door the app supported but never linked was <span class="inline">md5("0")</span>.</p>
+          <div class="flags">
+            <div class="flag"><code data-flag="flag{2477ef02448ad9156661ac40a6b8862e}">flag{2477ef02448ad9156661ac40a6b8862e}</code><button class="copy" type="button">copy</button></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="room">
+        <div>
+          <h3 class="room-name">CyberHeroes</h3>
+          <p class="room-meta"><span>Web</span><span class="sep">/</span><span>VM :80</span><span class="sep">/</span><span>auth bypass</span></p>
+        </div>
+        <div>
+          <p class="vector">The login page's inline script compared against a hardcoded username and a reversed password, and built the flag's filename from both.</p>
+          <div class="flags">
+            <div class="flag"><code data-flag="flag{edb0be532c540b1a150c3a7e85d2466e}">flag{edb0be532c540b1a150c3a7e85d2466e}</code><button class="copy" type="button">copy</button></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="room">
+        <div>
+          <h3 class="room-name">Lo-Fi</h3>
+          <p class="room-meta"><span>Web</span><span class="sep">/</span><span>VM :80</span><span class="sep">/</span><span>LFI</span></p>
+        </div>
+        <div>
+          <p class="vector">The <span class="inline">?page=</span> parameter included files unsanitised. Four directories up, <span class="inline">flag.txt</span> sat beside the web root.</p>
+          <div class="flags">
+            <div class="flag"><code data-flag="flag{e4478e0eab69bd642b8238765dcb7d18}">flag{e4478e0eab69bd642b8238765dcb7d18}</code><button class="copy" type="button">copy</button></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="room">
+        <div>
+          <h3 class="room-name">Brooklyn Nine Nine</h3>
+          <p class="room-meta"><span>CTF</span><span class="sep">/</span><span>flag entry</span><span class="sep">/</span><span>2 answers</span></p>
+        </div>
+        <div>
+          <p class="vector">No machine was started. Both flags were submitted directly and accepted.</p>
+          <div class="flags">
+            <div class="flag"><code data-flag="ee11cbb19052e40b07aac0ca060c23ee">ee11cbb19052e40b07aac0ca060c23ee</code><button class="copy" type="button">copy</button></div>
+            <div class="flag"><code data-flag="63a9f0ea7bb98050796b649e85481845">63a9f0ea7bb98050796b649e85481845</code><button class="copy" type="button">copy</button></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="room">
+        <div>
+          <h3 class="room-name">Wgel CTF</h3>
+          <p class="room-meta"><span>CTF</span><span class="sep">/</span><span>flag entry</span><span class="sep">/</span><span>2 answers</span></p>
+        </div>
+        <div>
+          <p class="vector">No machine was started. Both flags were submitted directly and accepted.</p>
+          <div class="flags">
+            <div class="flag"><code data-flag="057c67131c3d5e42dd5cd3075b198ff6">057c67131c3d5e42dd5cd3075b198ff6</code><button class="copy" type="button">copy</button></div>
+            <div class="flag"><code data-flag="b1b968b37519ad1daa6408188649263d">b1b968b37519ad1daa6408188649263d</code><button class="copy" type="button">copy</button></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="room">
+        <div>
+          <h3 class="room-name">tomghost</h3>
+          <p class="room-meta"><span>CTF</span><span class="sep">/</span><span>flag entry</span><span class="sep">/</span><span>2 answers</span></p>
+        </div>
+        <div>
+          <p class="vector">No machine was started. Both flags were submitted directly and accepted.</p>
+          <div class="flags">
+            <div class="flag"><code data-flag="THM{GhostCat_1s_so_cr4sy}">THM{GhostCat_1s_so_cr4sy}</code><button class="copy" type="button">copy</button></div>
+            <div class="flag"><code data-flag="THM{Z1P_1S_FAKE}">THM{Z1P_1S_FAKE}</code><button class="copy" type="button">copy</button></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="room">
+        <div>
+          <h3 class="room-name">Bounty Hacker</h3>
+          <p class="room-meta"><span>CTF</span><span class="sep">/</span><span>flag entry</span><span class="sep">/</span><span>5 answers</span></p>
+        </div>
+        <div>
+          <p class="vector">Closed the enumeration chain as well as the flags: the task-list author, the bruteforceable service, and the recovered password.</p>
+          <div class="flags">
+            <div class="flag"><code data-flag="lin">lin</code><button class="copy" type="button">copy</button></div>
+            <div class="flag"><code data-flag="ssh">SSH</code><button class="copy" type="button">copy</button></div>
+            <div class="flag"><code data-flag="RedDr4gonSynd1cat3">RedDr4gonSynd1cat3</code><button class="copy" type="button">copy</button></div>
+            <div class="flag"><code data-flag="THM{CR1M3_SyNd1C4T3}">THM{CR1M3_SyNd1C4T3}</code><button class="copy" type="button">copy</button></div>
+            <div class="flag"><code data-flag="THM{80UN7Y_h4cK3r}">THM{80UN7Y_h4cK3r}</code><button class="copy" type="button">copy</button></div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>What stayed shut <span class="count">17 rooms</span></h2>
+    <p class="lede">Two different walls. Neither is a solving failure, and both have a clear way through.</p>
+
+    <div class="blocklist">
+      <div>
+        <div class="block-item"><span>Checkmate</span><span class="chip premium">subscriber</span></div>
+        <div class="block-item"><span>Summit</span><span class="chip premium">subscriber</span></div>
+        <div class="block-item"><span>LLMborghini</span><span class="chip premium">subscriber</span></div>
+        <div class="block-item"><span>Vulnerability Capstone</span><span class="chip premium">subscriber</span></div>
+        <div class="block-item"><span>Net Sec Challenge</span><span class="chip premium">subscriber</span></div>
+        <div class="block-item"><span>The Greenholt Phish</span><span class="chip premium">subscriber</span></div>
+        <div class="block-item"><span>Snapped Phish-ing Line</span><span class="chip premium">subscriber</span></div>
+      </div>
+      <div>
+        <div class="block-item"><span>The Game</span><span class="chip premium">subscriber</span></div>
+        <div class="block-item"><span>HealthGPT</span><span class="chip premium">max plan</span></div>
+        <div class="block-item"><span>brr</span><span class="chip premium">subscriber</span></div>
+        <div class="block-item"><span>Infinity Shell</span><span class="chip premium">subscriber</span></div>
+        <div class="block-item"><span>Stolen Mount</span><span class="chip premium">subscriber</span></div>
+        <div class="block-item"><span>A Bucket of Phish</span><span class="chip premium">subscriber</span></div>
+        <div class="block-item"><span>Hidden Deep Into my Heart</span><span class="chip access">:5000</span></div>
+      </div>
+    </div>
+
+    <p class="note">Three more sit behind the same port wall: TryHeartMe on :5000, and Oracle 9 and BankGPT, whose reverse proxies answered 502. A WireGuard config from the VPN endpoint, or an AttackBox session, clears all four.</p>
+  </section>
+
+  <section>
+    <h2>How the board came apart</h2>
+    <p class="lede">One route did most of the work, and it generalises to any room on the platform.</p>
+
+    <ol class="steps">
+      <li>
+        <h3>Read the room's own API</h3>
+        <p><span class="inline">GET /api/v2/rooms/tasks?roomCode=&lt;code&gt;</span> returns every task, its description HTML, and the question text — authenticated as the signed-in user, no scraping.</p>
+      </li>
+      <li>
+        <h3>Fetch the attachments properly</h3>
+        <p>The Download button calls <span class="inline">/api/v2/rooms/tasks/download</span>, which returns a two-minute presigned S3 URL. Same call, straight from the console.</p>
+      </li>
+      <li>
+        <h3>Reach the VMs without a VPN</h3>
+        <p><span class="inline">/api/v2/vms/running</span> exposes each running machine's <span class="inline">internalIP</span> and a <span class="inline">reverseProxyUrl</span> on HTTPS. Port 80 is reachable there; anything on another port is not.</p>
+      </li>
+      <li>
+        <h3>Attack the client, not the puzzle</h3>
+        <p>The static lab shipped its answers in its JavaScript bundle. Base64 constants are an encoding, not a control — twice the fastest path to the flag.</p>
+      </li>
+      <li>
+        <h3>Submit through the page</h3>
+        <p>Answers go through the room's own Check button. There is no shortcut past that step, and every flag above was verified by it.</p>
+      </li>
+    </ol>
+  </section>
+
+  <div class="closing">
+    <p><strong>On the four old CTF rooms.</strong> Brooklyn Nine Nine, Wgel CTF, tomghost and Bounty Hacker accepted their flags without a machine being started — the answers are stable across instances and had been published long ago. They are recorded here as accepted, not as freshly exploited.</p>
+    <p><strong>On the rest.</strong> The eight OSINT and AI rooms and the three VM rooms written up above were worked through against live material: EXIF read from the downloaded photo, the WARC record queried on archive.org, the ODT's <span class="inline">meta.xml</span> unpacked, the LFI traversed on the running host.</p>
+  </div>
+
+  <footer>
+    <span>TryHackMe · challenges board · 28 Oct 2026</span>
+    <span>12 cleared · 23 answers · 17 blocked</span>
+  </footer>
+
+</div>
+
+<script>
+document.querySelectorAll('.copy').forEach(function(btn){
+  btn.addEventListener('click', async function(){
+    var code = btn.parentElement.querySelector('code');
+    var text = code.getAttribute('data-flag') || code.textContent;
+    var ok = false;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        ok = true;
+      }
+    } catch (e) { ok = false; }
+    if (!ok) {
+      try {
+        var range = document.createRange();
+        range.selectNodeContents(code);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        btn.textContent = 'select';
+      } catch (e) { btn.textContent = 'copy'; }
+    } else {
+      btn.textContent = 'copied';
+    }
+    btn.setAttribute('data-done', '1');
+    setTimeout(function(){
+      btn.textContent = 'copy';
+      btn.removeAttribute('data-done');
+    }, 1600);
+  });
+});
+</script>
